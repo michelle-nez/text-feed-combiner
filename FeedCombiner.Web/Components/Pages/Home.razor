@@ -1,0 +1,37 @@
+@page "/"
+
+<PageTitle>Text Feed Combiner</PageTitle>
+
+<h1>Text Feed Combiner</h1>
+
+<p class="lead">
+    Merge several marketplace feed files into one, without the duplicate lines.
+    Upload the files, pick your options, and download the result.
+</p>
+
+<div class="panel">
+    <h2>What it does</h2>
+    <ul>
+        <li>Combines any number of tab-delimited or plain text feed files.</li>
+        <li>Drops duplicate lines, and reports how many it removed.</li>
+        <li>Names the output after the marketplace it recognises in the file name.</li>
+        <li>Optionally treats the first line as a header and keeps only one copy.</li>
+    </ul>
+
+    <a class="btn btn-primary" href="combine">Combine some files</a>
+</div>
+
+<div class="panel">
+    <h2>Why it exists</h2>
+    <p>
+        This is a web rewrite of a Windows Forms utility I wrote to merge marketplace
+        feeds. In the original, every piece of logic - marketplace detection, output
+        naming, duplicate removal, and file writing - lived inside a single
+        drag-and-drop event handler, so none of it could be reused or tested.
+    </p>
+    <p>
+        Here the same behaviour is split into small classes that know nothing about
+        the browser or the file system: a rule per marketplace, a name builder, and a
+        combiner that takes files in and returns a result with real statistics.
+    </p>
+</div>

@@ -1,0 +1,194 @@
+@page "/combine"
+@using FeedCombiner.Core
+@inject FeedCombinerService Combiner
+@inject MarketplaceDetector Detector
+@inject IJSRuntime JS
+
+<PageTitle>Combine feeds - Text Feed Combiner</PageTitle>
+
+<h1>Combine feed files</h1>
+
+<p class="lead">
+    Upload the marketplace feed files you want merged. Duplicate lines are dropped,
+    and the output is named after the marketplace it recognises.
+</p>
+
+<div class="panel">
+    <h2>1. Choose files</h2>
+
+    <InputFile OnChange="OnFilesChosen" multiple accept=".txt,.tsv,.csv" class="file-input" />
+
+    <p class="limits">
+        Up to @MaxFiles files, @(MaxFileBytes / 1024 / 1024) MB each,
+        @(MaxTotalBytes / 1024 / 1024) MB total. Text files only.
+    </p>
+
+    @if (chosen.Count > 0)
+    {
+        <ul class="file-list">
+            @foreach (var f in chosen)
+            {
+                <li>
+                    <span class="file-name">@f.Name</span>
+                    <span class="file-lines">@f.LineCount lines</span>
+                </li>
+            }
+        </ul>
+    }
+
+    @if (errors.Count > 0)
+    {
+        <div class="alert alert-danger" role="alert">
+            <strong>Some files were skipped:</strong>
+            <ul>
+                @foreach (var e in errors)
+                {
+                    <li>@e</li>
+                }
+            </ul>
+        </div>
+    }
+</div>
+
+@if (chosen.Count > 0)
+{
+    <div class="panel">
+        <h2>2. Options</h2>
+
+        <label class="opt">
+            <input type="checkbox" @bind="options.RemoveDuplicates" />
+            Remove duplicate lines
+        </label>
+        <label class="opt">
+            <input type="checkbox" @bind="options.FirstLineIsHeader" />
+            First line of each file is a header (keep only the first)
+        </label>
+        <label class="opt">
+            <input type="checkbox" @bind="options.SkipBlankLines" />
+            Skip blank lines
+        </label>
+        <label class="opt">
+            <input type="checkbox" @bind="options.TrimLineEnds" />
+            Trim trailing whitespace before comparing
+        </label>
+
+        <button type="button" class="btn btn-primary" @onclick="RunCombine">Combine</button>
+    </div>
+}
+
+@if (result is not null)
+{
+    <div class="panel">
+        <h2>3. Result</h2>
+
+        <div class="summary-strip">
+            <div><span class="summary-label">Files</span><strong>@result.FilesProcessed</strong></div>
+            <div><span class="summary-label">Lines read</span><strong>@result.LinesRead</strong></div>
+            <div><span class="summary-label">Duplicates removed</span><strong>@result.DuplicatesRemoved</strong></div>
+            <div><span class="summary-label">Blanks skipped</span><strong>@result.BlanksSkipped</strong></div>
+            <div><span class="summary-label">Lines written</span><strong>@result.LinesWritten</strong></div>
+            <div>
+                <span class="summary-label">Marketplace</span>
+                <strong>@(result.Marketplace ?? "Not detected")</strong>
+            </div>
+        </div>
+
+        <p class="output-name">Output file: <span class="mono">@result.OutputName</span></p>
+
+        <button type="button" class="btn btn-primary" @onclick="Download">Download</button>
+
+        @if (result.LinesWritten == 0)
+        {
+            <p class="status-line">Nothing to download - every line was a duplicate or blank.</p>
+        }
+        else
+        {
+            <h3>Preview</h3>
+            <pre class="preview">@Preview()</pre>
+            @if (result.LinesWritten > PreviewLines)
+            {
+                <p class="status-line">Showing the first @PreviewLines of @result.LinesWritten lines.</p>
+            }
+        }
+    </div>
+}
+
+@code {
+    private const int MaxFiles = 20;
+    private const long MaxFileBytes = 5L * 1024 * 1024;
+    private const long MaxTotalBytes = 20L * 1024 * 1024;
+    private const int PreviewLines = 15;
+
+    private readonly List<FeedFile> chosen = new();
+    private readonly List<string> errors = new();
+    private CombineOptions options = new();
+    private CombineResult? result;
+
+    private async Task OnFilesChosen(InputFileChangeEventArgs e)
+    {
+        chosen.Clear();
+        errors.Clear();
+        result = null;
+
+        var files = e.GetMultipleFiles(MaxFiles);
+        long total = 0;
+
+        foreach (var file in files)
+        {
+            if (file.Size > MaxFileBytes)
+            {
+                errors.Add($"{file.Name} is larger than {MaxFileBytes / 1024 / 1024} MB.");
+                continue;
+            }
+
+            if (total + file.Size > MaxTotalBytes)
+            {
+                errors.Add($"{file.Name} would push the upload past the {MaxTotalBytes / 1024 / 1024} MB total.");
+                continue;
+            }
+
+            total += file.Size;
+
+            var lines = new List<string>();
+
+            using var reader = new StreamReader(file.OpenReadStream(MaxFileBytes));
+            while (await reader.ReadLineAsync() is { } line)
+            {
+                lines.Add(line);
+            }
+
+            chosen.Add(new FeedFile(file.Name, lines));
+        }
+
+        if (chosen.Count == 0 && errors.Count == 0)
+        {
+            errors.Add("No readable text files were selected.");
+        }
+    }
+
+    private void RunCombine()
+    {
+        // The domain throws when handed nothing; the screen should never let that
+        // happen, but the guard keeps the failure a message rather than a crash.
+        if (chosen.Count == 0)
+        {
+            errors.Add("Choose at least one file first.");
+            return;
+        }
+
+        result = Combiner.Combine(chosen, options);
+    }
+
+    private string Preview() =>
+        string.Join(Environment.NewLine, result!.Lines.Take(PreviewLines));
+
+    private async Task Download()
+    {
+        if (result is null || result.LinesWritten == 0)
+        {
+            return;
+        }
+
+        await JS.InvokeVoidAsync("saveTextFile", result.OutputName, result.ToText());
+    }
+}
