@@ -1,4 +1,5 @@
 using FeedCombiner.Core;
+using FeedCombiner.Web;
 using FeedCombiner.Web.Components;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -12,6 +13,10 @@ builder.Services.AddRazorComponents()
 builder.Services.AddSingleton(_ => new MarketplaceDetector());
 builder.Services.AddSingleton<OutputNameBuilder>();
 builder.Services.AddSingleton<FeedCombinerService>();
+
+// Holds a finished result for the download endpoint to serve.
+builder.Services.AddMemoryCache();
+builder.Services.AddSingleton<CombinedFileStore>();
 
 var app = builder.Build();
 
@@ -28,6 +33,18 @@ app.UseHttpsRedirection();
 app.UseAntiforgery();
 
 app.MapStaticAssets();
+// The download is a normal HTTP GET returning a file - no JavaScript involved.
+app.MapGet("/download/{id}", (string id, CombinedFileStore store) =>
+{
+    var file = store.Get(id);
+
+    return file is null
+        ? Results.NotFound("That download has expired. Combine the files again.")
+        : Results.File(System.Text.Encoding.UTF8.GetBytes(file.Content),
+                       "text/plain",
+                       file.FileName);
+});
+
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 

@@ -8,8 +8,11 @@ the files, pick your options, download the result.
 ## Stack
 
 - .NET 10, Blazor Server (interactive server rendering)
+- A minimal API endpoint for the file download
 - xUnit for the domain tests
 - No database - this one is about file handling and class design
+- **No custom JavaScript** - the only scripts on the page are the ones the Blazor
+  template ships with
 
 ## What it does
 
@@ -56,10 +59,32 @@ about the browser or the file system:
 | `OutputNameBuilder` | builds the output file name |
 | `FeedCombinerService` | combines and dedupes, returns a result |
 | `CombineOptions` / `CombineResult` | the inputs and outputs, as data |
+| `CombinedFileStore` | holds a finished file briefly so the download endpoint can serve it |
 
 The if/else chain became a list of rules, so adding Walmart was one line rather than
 another branch. `FeedCombiner.Core` has no reference to ASP.NET, Windows Forms, or a
 file path - which is what makes the 20 unit tests possible.
+
+## Downloading without JavaScript
+
+Clicking Combine parks the finished file in `CombinedFileStore` under a short id and
+renders an ordinary link:
+
+```csharp
+app.MapGet("/download/{id}", (string id, CombinedFileStore store) =>
+{
+    var file = store.Get(id);
+
+    return file is null
+        ? Results.NotFound("That download has expired. Combine the files again.")
+        : Results.File(Encoding.UTF8.GetBytes(file.Content), "text/plain", file.FileName);
+});
+```
+
+The store exists because a download is a plain HTTP GET, and a GET is a separate
+request from the Blazor circuit that produced the result - so the endpoint cannot
+simply read it from the component. Entries expire after ten minutes, and an expired
+link returns a 404 with a message rather than an error page.
 
 ## Two bugs fixed on the way over
 
