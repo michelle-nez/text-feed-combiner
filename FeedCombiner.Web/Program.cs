@@ -1,4 +1,5 @@
 using FeedCombiner.Core;
+using MudBlazor.Services;
 using FeedCombiner.Web;
 using FeedCombiner.Web.Components;
 
@@ -7,6 +8,8 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+
+builder.Services.AddMudServices();
 
 // The domain classes. They have no UI and no file-system dependencies, which is
 // what lets them be registered and tested like any other service.

@@ -1,0 +1,12 @@
+@* A single labelled figure in the result summary. *@
+<div>
+    <MudText Typo="Typo.caption" Color="Color.Secondary" Style="text-transform:uppercase;letter-spacing:.04em;">
+        @Label
+    </MudText>
+    <MudText Typo="Typo.h6">@Value</MudText>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public string Label { get; set; } = string.Empty;
+    [Parameter, EditorRequired] public string Value { get; set; } = string.Empty;
+}

@@ -2,36 +2,45 @@
 
 <PageTitle>Text Feed Combiner</PageTitle>
 
-<h1>Text Feed Combiner</h1>
-
-<p class="lead">
+<MudText Typo="Typo.h4" Class="mb-3">Text Feed Combiner</MudText>
+<MudText Typo="Typo.subtitle1" Color="Color.Secondary" Class="mb-8">
     Merge several marketplace feed files into one, without the duplicate lines.
     Upload the files, pick your options, and download the result.
-</p>
+</MudText>
 
-<div class="panel">
-    <h2>What it does</h2>
-    <ul>
-        <li>Combines any number of tab-delimited or plain text feed files.</li>
-        <li>Drops duplicate lines, and reports how many it removed.</li>
-        <li>Names the output after the marketplace it recognises in the file name.</li>
-        <li>Optionally treats the first line as a header and keeps only one copy.</li>
-    </ul>
+<MudPaper Elevation="0" Class="pa-8 mb-5" Style="border:1px solid var(--mud-palette-divider);">
+    <MudText Typo="Typo.h6" Class="mb-4">What it does</MudText>
+    <MudList T="string" Dense="true">
+        <MudListItem T="string" Icon="@Icons.Material.Outlined.MergeType">
+            Combines any number of tab-delimited or plain text feed files
+        </MudListItem>
+        <MudListItem T="string" Icon="@Icons.Material.Outlined.FilterAlt">
+            Drops duplicate lines, and reports how many it removed
+        </MudListItem>
+        <MudListItem T="string" Icon="@Icons.Material.Outlined.Label">
+            Names the output after the marketplace it recognises in the file name
+        </MudListItem>
+        <MudListItem T="string" Icon="@Icons.Material.Outlined.TableRows">
+            Optionally treats the first line as a header and keeps only one copy
+        </MudListItem>
+    </MudList>
+    <MudButton Href="/combine" Variant="Variant.Filled" Color="Color.Primary" Size="Size.Large" Class="mt-5"
+               EndIcon="@Icons.Material.Outlined.ArrowForward">
+        Combine some files
+    </MudButton>
+</MudPaper>
 
-    <a class="btn btn-primary" href="combine">Combine some files</a>
-</div>
-
-<div class="panel">
-    <h2>Why it exists</h2>
-    <p>
+<MudPaper Elevation="0" Class="pa-8" Style="border:1px solid var(--mud-palette-divider);">
+    <MudText Typo="Typo.h6" Class="mb-3">Why it exists</MudText>
+    <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-3">
         This is a web rewrite of a Windows Forms utility I wrote to merge marketplace
         feeds. In the original, every piece of logic - marketplace detection, output
         naming, duplicate removal, and file writing - lived inside a single
         drag-and-drop event handler, so none of it could be reused or tested.
-    </p>
-    <p>
+    </MudText>
+    <MudText Typo="Typo.body2" Color="Color.Secondary">
         Here the same behaviour is split into small classes that know nothing about
         the browser or the file system: a rule per marketplace, a name builder, and a
         combiner that takes files in and returns a result with real statistics.
-    </p>
-</div>
+    </MudText>
+</MudPaper>

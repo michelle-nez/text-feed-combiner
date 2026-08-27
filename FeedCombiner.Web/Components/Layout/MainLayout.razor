@@ -1,20 +1,31 @@
+@using FeedCombiner.Web
 @inherits LayoutComponentBase
 
-<div class="page">
-    <div class="sidebar">
-        <NavMenu />
-    </div>
+<MudThemeProvider Theme="CombinerTheme.Theme" />
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
 
-    <main>
-        <div class="top-row px-4">
-            <a href="https://github.com/michelle-nez/text-feed-combiner" target="_blank">Source on GitHub</a>
-        </div>
+@* No drawer at all - this is a one-job utility, so it gets a single centred
+   column. Each app in the portfolio uses a different layout shape on purpose. *@
+<MudLayout>
+    <MudAppBar Elevation="0" Dense="true" Style="background:transparent;backdrop-filter:blur(6px);">
+        <MudIcon Icon="@Icons.Material.Outlined.MergeType" Color="Color.Primary" Class="mr-2" />
+        <MudText Typo="Typo.h6" Color="Color.Primary">Text Feed Combiner</MudText>
+        <MudSpacer />
+        <MudButton Href="/" Variant="Variant.Text" Class="d-none d-sm-flex">Home</MudButton>
+        <MudButton Href="/combine" Variant="Variant.Text" Class="d-none d-sm-flex">Combine</MudButton>
+        <MudIconButton Href="https://github.com/michelle-nez/text-feed-combiner" Target="_blank"
+                       Icon="@Icons.Custom.Brands.GitHub" Class="ml-1" />
+    </MudAppBar>
 
-        <article class="content px-4">
+    @* No pt-* class here - that would override the offset that clears the fixed AppBar. *@
+    <MudMainContent>
+        <MudContainer MaxWidth="MaxWidth.Medium" Class="pt-10 pb-12">
             @Body
-        </article>
-    </main>
-</div>
+        </MudContainer>
+    </MudMainContent>
+</MudLayout>
 
 <div id="blazor-error-ui" data-nosnippet>
     An unhandled error has occurred.

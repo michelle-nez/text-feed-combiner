@@ -7,111 +7,123 @@
 
 <PageTitle>Combine feeds - Text Feed Combiner</PageTitle>
 
-<h1>Combine feed files</h1>
-
-<p class="lead">
+<MudText Typo="Typo.h4" Class="mb-2">Combine feed files</MudText>
+<MudText Typo="Typo.subtitle1" Color="Color.Secondary" Class="mb-8">
     Upload the marketplace feed files you want merged. Duplicate lines are dropped,
     and the output is named after the marketplace it recognises.
-</p>
+</MudText>
 
-<div class="panel">
-    <h2>1. Choose files</h2>
+<MudPaper Elevation="0" Class="pa-8 mb-5" Style="border:1px solid var(--mud-palette-divider);">
+    <MudText Typo="Typo.h6" Class="mb-4">1 &nbsp;·&nbsp; Choose files</MudText>
 
-    <InputFile OnChange="OnFilesChosen" multiple accept=".txt,.tsv,.csv" class="file-input" />
+    @* MudFileUpload renders its own button. ActivatorContent is not a parameter in
+       MudBlazor 9, so a custom activator here is silently ignored. *@
+    <MudFileUpload T="IReadOnlyList<IBrowserFile>" FilesChanged="OnFilesChosen" Accept=".txt,.tsv,.csv"
+                   MaximumFileCount="MaxFiles" Class="feed-upload" />
 
-    <p class="limits">
+    <MudText Typo="Typo.caption" Color="Color.Secondary" Class="d-block mt-3">
         Up to @MaxFiles files, @(MaxFileBytes / 1024 / 1024) MB each,
         @(MaxTotalBytes / 1024 / 1024) MB total. Text files only.
-    </p>
+    </MudText>
 
     @if (chosen.Count > 0)
     {
-        <ul class="file-list">
+        <MudList T="string" Dense="true" Class="mt-4">
             @foreach (var f in chosen)
             {
-                <li>
-                    <span class="file-name">@f.Name</span>
-                    <span class="file-lines">@f.LineCount lines</span>
-                </li>
+                <MudListItem T="string" Icon="@Icons.Material.Outlined.Description">
+                    <div class="d-flex flex-wrap align-center justify-space-between gap-2">
+                        <MudText Typo="Typo.body2" Style="font-family:Consolas,monospace;">@f.Name</MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">@f.LineCount lines</MudText>
+                    </div>
+                </MudListItem>
             }
-        </ul>
+        </MudList>
     }
 
     @if (errors.Count > 0)
     {
-        <div class="alert alert-danger" role="alert">
-            <strong>Some files were skipped:</strong>
-            <ul>
-                @foreach (var e in errors)
-                {
-                    <li>@e</li>
-                }
-            </ul>
-        </div>
+        <MudAlert Severity="Severity.Warning" Class="mt-4" Dense="true">
+            <MudText Typo="Typo.body2" Class="mb-1"><b>Some files were skipped:</b></MudText>
+            @foreach (var e in errors)
+            {
+                <MudText Typo="Typo.body2">@e</MudText>
+            }
+        </MudAlert>
     }
-</div>
+</MudPaper>
 
 @if (chosen.Count > 0)
 {
-    <div class="panel">
-        <h2>2. Options</h2>
+    <MudPaper Elevation="0" Class="pa-8 mb-5" Style="border:1px solid var(--mud-palette-divider);">
+        <MudText Typo="Typo.h6" Class="mb-4">2 &nbsp;·&nbsp; Options</MudText>
 
-        <label class="opt">
-            <input type="checkbox" @bind="options.RemoveDuplicates" />
+        <MudSwitch @bind-Value="options.RemoveDuplicates" Color="Color.Primary" Class="d-block">
             Remove duplicate lines
-        </label>
-        <label class="opt">
-            <input type="checkbox" @bind="options.FirstLineIsHeader" />
+        </MudSwitch>
+        <MudSwitch @bind-Value="options.FirstLineIsHeader" Color="Color.Primary" Class="d-block">
             First line of each file is a header (keep only the first)
-        </label>
-        <label class="opt">
-            <input type="checkbox" @bind="options.SkipBlankLines" />
+        </MudSwitch>
+        <MudSwitch @bind-Value="options.SkipBlankLines" Color="Color.Primary" Class="d-block">
             Skip blank lines
-        </label>
-        <label class="opt">
-            <input type="checkbox" @bind="options.TrimLineEnds" />
+        </MudSwitch>
+        <MudSwitch @bind-Value="options.TrimLineEnds" Color="Color.Primary" Class="d-block">
             Trim trailing whitespace before comparing
-        </label>
+        </MudSwitch>
 
-        <button type="button" class="btn btn-primary" @onclick="RunCombine">Combine</button>
-    </div>
+        <MudButton OnClick="RunCombine" Variant="Variant.Filled" Color="Color.Primary" Size="Size.Large"
+                   Class="mt-5" StartIcon="@Icons.Material.Outlined.MergeType">
+            Combine
+        </MudButton>
+    </MudPaper>
 }
 
 @if (result is not null)
 {
-    <div class="panel">
-        <h2>3. Result</h2>
+    <MudPaper Elevation="0" Class="pa-8" Style="border:1px solid var(--mud-palette-divider);">
+        <MudText Typo="Typo.h6" Class="mb-4">3 &nbsp;·&nbsp; Result</MudText>
 
-        <div class="summary-strip">
-            <div><span class="summary-label">Files</span><strong>@result.FilesProcessed</strong></div>
-            <div><span class="summary-label">Lines read</span><strong>@result.LinesRead</strong></div>
-            <div><span class="summary-label">Duplicates removed</span><strong>@result.DuplicatesRemoved</strong></div>
-            <div><span class="summary-label">Blanks skipped</span><strong>@result.BlanksSkipped</strong></div>
-            <div><span class="summary-label">Lines written</span><strong>@result.LinesWritten</strong></div>
-            <div>
-                <span class="summary-label">Marketplace</span>
-                <strong>@(result.Marketplace ?? "Not detected")</strong>
-            </div>
+        <MudGrid Spacing="3" Class="mb-4">
+            <MudItem xs="6" sm="4" md="2"><Stat Label="Files" Value="@result.FilesProcessed.ToString()" /></MudItem>
+            <MudItem xs="6" sm="4" md="2"><Stat Label="Lines read" Value="@result.LinesRead.ToString()" /></MudItem>
+            <MudItem xs="6" sm="4" md="3"><Stat Label="Duplicates removed" Value="@result.DuplicatesRemoved.ToString()" /></MudItem>
+            <MudItem xs="6" sm="4" md="2"><Stat Label="Blanks skipped" Value="@result.BlanksSkipped.ToString()" /></MudItem>
+            <MudItem xs="6" sm="4" md="3"><Stat Label="Lines written" Value="@result.LinesWritten.ToString()" /></MudItem>
+        </MudGrid>
+
+        <div class="d-flex flex-wrap align-center gap-2 mb-4">
+            <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Filled">
+                @(result.Marketplace ?? "No marketplace detected")
+            </MudChip>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">
+                Output: <span style="font-family:Consolas,monospace;">@result.OutputName</span>
+            </MudText>
         </div>
-
-        <p class="output-name">Output file: <span class="mono">@result.OutputName</span></p>
-
-        <a class="btn btn-primary" href="@downloadUrl" download>Download</a>
 
         @if (result.LinesWritten == 0)
         {
-            <p class="status-line">Nothing to download - every line was a duplicate or blank.</p>
+            <MudAlert Severity="Severity.Info" Dense="true">
+                Nothing to download - every line was a duplicate or blank.
+            </MudAlert>
         }
         else
         {
-            <h3>Preview</h3>
+            <MudButton Href="@downloadUrl" Variant="Variant.Filled" Color="Color.Primary" Size="Size.Large"
+                       StartIcon="@Icons.Material.Outlined.Download" Class="mb-5">
+                Download
+            </MudButton>
+
+            <MudText Typo="Typo.subtitle2" Color="Color.Secondary" Class="mb-2">PREVIEW</MudText>
             <pre class="preview">@Preview()</pre>
+
             @if (result.LinesWritten > PreviewLines)
             {
-                <p class="status-line">Showing the first @PreviewLines of @result.LinesWritten lines.</p>
+                <MudText Typo="Typo.caption" Color="Color.Secondary">
+                    Showing the first @PreviewLines of @result.LinesWritten lines.
+                </MudText>
             }
         }
-    </div>
+    </MudPaper>
 }
 
 @code {
@@ -126,14 +138,13 @@
     private CombineResult? result;
     private string? downloadUrl;
 
-    private async Task OnFilesChosen(InputFileChangeEventArgs e)
+    private async Task OnFilesChosen(IReadOnlyList<IBrowserFile> files)
     {
         chosen.Clear();
         errors.Clear();
         result = null;
         downloadUrl = null;
 
-        var files = e.GetMultipleFiles(MaxFiles);
         long total = 0;
 
         foreach (var file in files)
