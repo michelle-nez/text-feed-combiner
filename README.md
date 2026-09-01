@@ -8,11 +8,14 @@ the files, pick your options, download the result.
 ## Stack
 
 - .NET 10, Blazor Server (interactive server rendering)
-- A minimal API endpoint for the file download
-- xUnit for the domain tests
+- MudBlazor 9.9.0 for the UI
+- A minimal API endpoint for the file download - the only HTTP endpoint in the app,
+  documented in [docs/architecture.md](docs/architecture.md#the-http-api). There is
+  no Swagger/OpenAPI
+- xUnit - **20 tests**, all passing
 - No database - this one is about file handling and class design
 - **No custom JavaScript** - the only scripts on the page are the ones the Blazor
-  template ships with
+  and MudBlazor templates ship with
 
 ## What it does
 
@@ -98,9 +101,24 @@ link returns a 404 with a message rather than an error page.
 
 1. Open `TextFeedCombiner.sln` in Visual Studio 2026.
 2. Run `FeedCombiner.Web` and open `/combine`.
-3. `dotnet test` runs the domain tests.
+3. `dotnet test` runs the domain tests - expect 20 passed.
 
-There is no database and no configuration - nothing to set up.
+**There is no database and no configuration - nothing to set up.** No connection
+string, no User Secrets, no environment variables.
+
+Full setup, plus seven checks that exercise dedupe, header handling, marketplace
+detection and the download link, is in
+[docs/getting-started.md](docs/getting-started.md).
+
+## Documentation
+
+| Document | Covers |
+|---|---|
+| [docs/getting-started.md](docs/getting-started.md) | Setup, seven verification checks, current deployment state |
+| [docs/architecture.md](docs/architecture.md) | The three projects, the rewrite, the download endpoint, why there is no JavaScript |
+| [docs/testing.md](docs/testing.md) | What the 20 tests cover, what they do not, and why they are possible |
+| [docs/configuration.md](docs/configuration.md) | The very short list of settings, and the constants that are in code instead |
+| [docs/troubleshooting.md](docs/troubleshooting.md) | Combining, naming, download and test problems specific to this app |
 
 ## What I would do next
 
@@ -108,6 +126,10 @@ There is no database and no configuration - nothing to set up.
 - Let the user pick which marketplace rules apply instead of inferring from the name
 - Stream very large files instead of reading them fully into memory
 - A CSV mode that is column-aware rather than line-aware
+
+## License
+
+MIT - see [LICENSE](LICENSE).
 
 ---
 
